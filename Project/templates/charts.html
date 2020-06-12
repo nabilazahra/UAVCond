@@ -1,0 +1,594 @@
+{% extends 'base.html' %}
+
+<script>
+{% block jquery %}
+
+//Global Variable Declarations
+
+var endpoint = '/api/chart/data/'
+var flowData = [];
+var labels = [];
+var pressureData = [];
+var totalHeadData = [];
+var powerData = [];
+var efficiencyData = [];
+var temperatureData = [];
+var hoursData = [];
+var powerOutputData = [];
+var frictionData = [];
+var volumeData = [];
+var energyLossData =[];
+var causeData = [];
+var statusData = [];
+var pipingData = [];
+var electricityData = [];
+var totalHeadData = [];
+var gasEmittedData = [];
+var overallEfficiencyData = [];
+var performanceClassData = [];
+var pipingLossData = [];
+var motorBestPractice = [];
+var pumpBestPractice = [];
+var pipingBestPractice = [];
+var overallBestPractice = [];
+var myBarChart;
+var electricalBreakDownData = [];
+
+
+var motorLossData = [];
+var staticDischargeData = [];
+var staticSuctionData = [];
+var energyPerformanceIndex1 = [];
+var energyPerformanceIndex2 = [];
+var energyPerformanceIndex3 = [];
+var energyPerformanceIndex4 = [];
+var motorEfficiencyData = [];
+
+//Periodic Data Calling via REST Framework API
+
+(function poll() {
+    setTimeout(function() {
+        $.ajax({
+        method: "GET",
+        url: endpoint,
+        success: function(data){
+            flowData = data.flow
+            pressureData = data.pressure
+            powerData = data.power
+            temperatureData = data.temperature
+            hoursData = data.hours
+            powerOutputData = data.powerOutput
+            frictionData = data.friction
+            volumeData = data.volume
+            efficiencyData = data.efficiency
+            energyLossData = data.energyloss
+            electricityData = data.electricity
+            causeData = data.cause
+            statusData = data.status
+            pipingData = data.piping
+            totalHeadData = data.totalhead
+            gasEmittedData = data.gasemitted
+            overallEfficiencyData = data.overallefficiency
+            performanceClassData = data.performanceclass
+            pipingLossData = data.pipingloss
+            motorLossData = data.motorloss
+            staticDischargeData = data.staticdischarge
+            staticSuctionData = data.staticsuction
+            pumpBestPractice = data.pumpbestpractice
+            motorBestPractice = data.motorbestpractice
+            pipingBestPractice = data.pipingbestpractice
+            overallBestPractice = data.overallbestpractice
+            motorEfficiencyData = data.motorefficiency
+            energyPerformanceIndex1 = data.EPI1
+            energyPerformanceIndex2 = data.EPI2
+            energyPerformanceIndex3 = data.EPI3
+            energyPerformanceIndex4 = data.EPI4
+
+        },
+        error: function(error_data){
+            console.log("error");
+            console.log(error_data);
+        },
+        complete: poll,
+        timeout: 2000
+    })
+    
+    BestPracticeData = [motorBestPractice, pumpBestPractice, pipingBestPractice, overallBestPractice]
+    ActualEfficiencyData = [motorEfficiencyData, efficiencyData, pipingData, overallEfficiencyData, 90]
+    console.log(motorLossData);
+    electricalBreakDownData = [motorLossData, energyLossData, pipingLossData, overallEfficiencyData] //motor, pumping, friction, useful work
+   
+    
+    
+    
+    }, 5000);
+})();  
+
+//Executing the Main Function
+
+setChart()
+
+//Main Function Definition, data from the REST Framework API is displayed and changed periodically in this function
+
+function setChart(){
+
+    //Assigning HTML Element to The Javascript Cariable
+
+    var ctx = document.getElementById("myChart");
+    var ctx2 = document.getElementById("myChart2");
+    var ctx3 = document.getElementById("myChart3");
+    var ctx4 = document.getElementById("myChart4");
+    var ctx5 = document.getElementById("myChart5");
+    var ctx6 = document.getElementById("myChart6");
+    
+    var efficiency = document.querySelector(".indikator-efisiensi");
+    //var energyloss = document.querySelector(".indikator-energyloss");
+    var volume = document.querySelector(".indikator-volume");
+    var friction = document.querySelector(".indikator-friction");
+    var cause = document.querySelector(".indikator-cause");
+    var status = document.querySelector(".indikator-status");
+    var electricity = document.querySelector(".indikator-electricity");
+    var hours = document.querySelector(".indikator-hour");
+    //var piping = document.querySelector(".indikator-piping");
+    var performanceclass = document.querySelector('.indikator-performanceclass');
+    var gasemitted = document.querySelector('.indikator-gasemitted');
+    var overallefficiency = document.querySelector('.indikator-overallefficiency');
+    var staticdischarge = document.querySelector('.indikator-staticdischarge');
+    var staticsuction = document.querySelector('.indikator-staticsuction');
+    var EPI1 = document.querySelector('.indikator-EPI1');
+    var EPI2 = document.querySelector('.indikator-EPI2');
+    var EPI3 = document.querySelector('.indikator-EPI3');
+    var EPI4 = document.querySelector('.indikator-EPI4');
+
+    //Composing The Charts with Chart.js
+
+    //Flow Data Chart
+    var myChart = new Chart(ctx2, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Flow (m3/hr)',
+            data: [],
+            backgroundColor: 
+                'rgba(54, 162, 235, 0.2)',
+            
+            borderColor: 
+                'rgba(54, 162, 235, 1)',
+                
+            
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            xAxes: [{
+                //Streaming Plugin for Chart.js
+                type: 'realtime',
+                realtime: {
+                    onRefresh: function(myChart) {
+                        myChart.data.datasets.forEach(function(dataset) {
+                            dataset.data.push({
+                                x: Date.now(),
+                                y: flowData
+                            });
+                        })
+                    },
+                    //delay: 2000,
+                },
+            }]
+            }
+        }
+    }
+);
+    //Power Output and Input Data Chart
+    var myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        datasets: [{
+            label: 'Pump Shaft Power Input (kW)',
+            data: [],
+            backgroundColor: 
+                'rgba(255, 99, 132, 0.2)',
+            borderColor: 
+                'rgba(255,99,132,1)',
+            borderWidth: 1
+        },
+        {
+            label: 'Pump Hydraulic Power Output (kW)',
+            data: [],
+            backgroundColor: 
+                'rgba(54, 162, 235, 0.2)',
+            borderColor: 
+                'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            xAxes: [{
+                //Streaming data plugin with slight modifications for 2 datasets
+                type: 'realtime',
+                realtime: {
+                    onRefresh: function(myChart) {
+                        myChart.data.datasets.forEach(function(dataset) {
+                            if (dataset.label === 'Pump Shaft Power Input (kW)') {
+                                efficiency.innerHTML = efficiencyData;
+                                dataset.data.push({
+                                    x: Date.now(),
+                                    y: powerData,
+                            });
+                        }
+                            else {
+                                dataset.data.push({
+                                    x: Date.now(),
+                                    y: powerOutputData,
+
+                            });
+                        }
+                    })
+                    },
+                    delay: 8000,
+                },
+            }]
+            }
+        }
+    }
+);
+
+//Pressure Data Chart
+var myChart = new Chart(ctx3, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Total Head Pressure (m)',
+            data: [],
+            backgroundColor: 
+                'rgba(255, 206, 86, 0.2)',
+            
+            borderColor: 
+                'rgba(255, 206, 86, 1)',
+            
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            xAxes: [{
+                //Streaming Plugin for Chart.js
+                type: 'realtime',
+                realtime: {
+                    onRefresh: function(myChart) {
+                        myChart.data.datasets.forEach(function(dataset) {
+                            dataset.data.push({
+                                x: Date.now(),
+                                y: totalHeadData
+                            });
+                        })
+                    },
+                    //delay: 2000,
+                },
+            }]
+            }
+        }
+    }
+);
+
+
+
+//Pump Temperature Data Chart along with the assigning of values into number indicators, like efficiency, energy loss, etc.
+var myChart = new Chart(ctx4, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Pump Temperature (C)',
+            data: [],
+            backgroundColor: 
+                'rgba(75, 192, 192, 0.2)',
+            
+            
+            borderColor: 
+                'rgba(75, 192, 192, 1)',
+            
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            xAxes: [{
+                type: 'realtime',
+                realtime: {
+                    //Streaming Plugin and value assigning to the HTML Element
+                    onRefresh: function(myChart) {
+                        myBarChart.data.datasets[0].data = BestPracticeData;
+                        myBarChart.data.datasets[1].data = ActualEfficiencyData;
+                        myBarChart.data.datasets[1].data[0] = motorEfficiencyData;
+                        myBarChart.update();
+                        console.log(electricalBreakDownData);
+                        myPolarChart.data.datasets[0].data = electricalBreakDownData;
+                        myPolarChart.update();
+                        console.log (myPolarChart.data.datasets[0].data)
+                        myChart.data.datasets.forEach(function(dataset) {
+                            efficiency.innerHTML = efficiencyData;
+                            //energyloss.innerHTML = energyLossData;
+                            volume.innerHTML = volumeData;
+                            status.innerHTML = statusData;
+                            cause.innerHTML = causeData;
+                            hours.innerHTML = hoursData;
+                            electricity.innerHTML = electricityData;
+                            friction.innerHTML = frictionData;
+                            //piping.innerHTML = pipingData;
+                            gasemitted.innerHTML = gasEmittedData;
+                            overallefficiency.innerHTML = overallEfficiencyData;
+                            performanceclass.innerHTML = performanceClassData;
+                            staticdischarge.innerHTML = staticDischargeData;
+                            staticsuction.innerHTML = staticSuctionData;
+                            EPI1.innerHTML = energyPerformanceIndex1;
+                            EPI2.innerHTML = energyPerformanceIndex2;
+                            EPI3.innerHTML = energyPerformanceIndex3;
+                            EPI4.innerHTML = energyPerformanceIndex4;
+                            
+                            dataset.data.push({
+                                x: Date.now(),
+                                y: temperatureData
+                            });
+                        })
+                    },
+                    //delay: 2000,
+                },
+            }]
+            }
+        }
+    }
+);
+
+//BAR DIAGRAM Best Practice Vs Actual
+var myBarChart = new Chart(ctx5, {
+    type: 'bar',
+    data: {
+        labels : ['Motor Efficiency', 'Pump Hydraulic Efficiency', 'Piping Efficiency', 'Overall Efficiency'],
+        datasets: [{
+            label: 'Best Practice',
+            data: [100, 60 , 50 , 70 , 60],
+            backgroundColor: 
+                'rgba(255, 99, 132, 0.2)',
+            borderColor: 
+                'rgba(255,99,132,1)',
+            borderWidth: 1
+        },
+        {
+            label: 'Actual',
+            data: [100 , 90, 80, 70, 10],
+            backgroundColor: 
+                'rgba(54, 162, 235, 0.2)',
+            borderColor: 
+                'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+					legend: {
+						position: 'top',
+					},
+					title: {
+						display: true,
+						text: 'Actual Vs Best Practice Efficiency (%)'
+                    },
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                min:0
+                            },
+                            offset: true,
+                        }],
+                    }  
+    }
+});
+
+//POLAR DIAGRAM, Electrical Energy Breakdown
+var myPolarChart = new Chart (ctx6, {
+    type: 'polarArea',
+    data: {
+        datasets: [{
+            data: [80,60,40,50],
+            backgroundColor: [
+            'rgb(255, 159, 64, 0.2)',
+            'rgb(255, 205, 86, 0.2)',
+            'rgb(75, 192, 192, 0.2)',
+            'rgba(54, 162, 235, 0.2)'
+            ],
+            borderColor: [
+            'rgb(255, 159, 64, 1)',
+            'rgb(255, 205, 86, 1)',
+            'rgb(75, 192, 192, 1)',
+            'rgba(54, 162, 235, 1)'
+            ],
+            label: 'Electrical Energy Breakdown (%)'
+        }],
+        labels: [
+            'Motor Losses',
+            'Pumping Losses',
+            'Friction Losses',
+            'Useful Work Done'
+        ]
+    },
+    options:  {
+        responsive: true,
+        legend: {
+            position: 'right',
+        },
+        title: {
+            display: true,
+            text: 'Electrical Energy Breakdown (%)'
+        },
+        scale: {
+            ticks: {
+                beginAtZero: true
+            },
+            reverse: false
+        },
+    }
+});
+
+}
+
+
+{% endblock %}
+</script>
+
+{% block content %}
+
+<!--CSS for simple styling configurations-->
+
+<style>
+        h2 {
+          color:salmon;
+        }
+        .indikator {
+            background-color: lightblue;
+    
+        }
+        .description {
+            background-color: lightyellow;
+        }
+        .EPI {
+            background-color: coral ;
+        }
+        .EPI-judul {
+            color: lightyellow;
+
+        
+        }
+        .space {
+            margin-top: 50px;
+            
+        }
+        
+      </style>
+
+<!--Layouting the HTML Page using bootstrap grid system-->
+
+<div class='row space'>
+       <div class='col-xs-12'>
+           <h1>Pump Performance Data Dashboard</h1>
+       </div>
+</div>
+<div class='row space'>   
+           <div class='col-xs-12 col-md-8'>
+               <canvas id="myChart" width="400" height="300"></canvas>
+           </div>
+        <div class=' description ' width = '200' height = '450'>
+           <div class='col-xs-6 col-md-4 description' width = '200' height = '150'>
+                    <h2>Efficiency/Pump Hydraulic Frequency (%)</h2>
+                    <h3 class = 'indikator-efisiensi'>0</h3>
+           </div>
+           <div class='col-xs-6 col-md-4 description'  width = '200' height = '150'>
+                     <h2>kgCO2 Emitted</h2>
+                     <h3 class = 'indikator-gasemitted'>0</h3>
+            </div>
+            <div class='col-xs-6 col-md-4 description'  width = '200' height = '150'>
+                         <h2>Electricity Consumed (kWh)</h2>
+                         <h3 class = 'indikator-electricity'>0</h3>
+            </div>
+            <div class='col-xs-6 col-md-4 description'  width = '200' height = '150'>
+                <h2>Overall System Efficiency (%)</h2>
+                <h3 class = 'indikator-overallefficiency'>0</h3>
+   </div>
+        </div>
+</div>
+<div class = 'row space'>
+           <div class ='col-xs-6 col-md-4'>
+            <canvas id="myChart3" width="200" height="200"></canvas>
+         </div>
+         <div class ='col-xs-6 col-md-4'>
+                <canvas id="myChart4" width="200" height="200"></canvas>
+        </div>
+        <div class ='col-xs-6 col-md-4'>
+                <canvas id= "myChart2" width="200" height="200"></canvas>
+            </div>
+</div>
+<div class ='row indikator space'>
+    <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '100'>
+                 <h2>Performance Class Grade</h2>
+                 <h3 class = 'indikator-performanceclass'>0</h3>
+        </div>
+    <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '150'>
+                 <h2>System Status</h2>
+                 <h3 class = 'indikator-status'>0</h3>
+    </div>
+    <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '150'>
+                 <h2>Warning Cause</h2>
+                 <h3 class = 'indikator-cause'>0</h3>
+    </div>
+</div>
+<div class ='row indikator'>
+        <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '100'>
+            <h2>Fluid Displaced Volume (m3)</h2>
+            <h3 class = 'indikator-volume'>0</h3>
+        </div>
+        <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '150'>
+            <h2>Operating Hours (hours)</h2>
+            <h3 class = 'indikator-hour'>0</h3>
+        </div>
+        <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '150'>
+                     <h2>Friction Loss (m)</h2>
+                     <h3 class = 'indikator-friction'>0</h3>
+        </div>
+</div>
+<div class ='row indikator'>
+        <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '100'>
+                     <h2>Static Discharge Head (m)</h2>
+                     <h3 class = 'indikator-staticdischarge'>0</h3>
+            </div>
+        <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '150'>
+                     <h2>Static Suction Head (m)</h2>
+                     <h3 class = 'indikator-staticsuction'>0</h3>
+        </div>
+        <div class='col-xs-6 col-md-4 indikator'  width = '200' height = '150'>
+                     <h2></h2>
+                     <h3></h3>
+        </div>
+</div>
+<div class = 'row space'>
+    <div class ='col-xs-6 col-md-6'>
+     <canvas id="myChart5" width="300" height="200"></canvas>
+  </div>
+  <div class ='col-xs-6 col-md-6'>
+         <canvas id="myChart6" width="300" height="200"></canvas>
+ </div>
+</div> 
+
+<div class ='row indikator EPI space'>
+    <div class='col-xs-12 col-md-12 indikator EPI'  width = '200' height = '400'>
+        <h2 class = 'EPI-judul'>Energy Performance Indicators</h2>
+        
+    </div>
+  
+
+        <div class='col-xs-6 col-md-6 indikator EPI'  width = '200' height = '200'>
+            <h2 class = 'EPI-judul'>kWh/m3</h2>
+            <h3 class = 'indikator-EPI1'>0</h3>
+        </div>
+        <div class='col-xs-6 col-md-6 indikator EPI'  width = '200' height = '200'>
+                 <h2 class = 'EPI-judul'>kWh/1000m3/m</h2>
+                 <h3 class = 'indikator-EPI2'>0</h3>
+        </div>
+      
+    
+            <div class='col-xs-6 col-md-6 indikator EPI'  width = '200' height = '200'>
+            <h2 class = 'EPI-judul'>kgCO2/m3</h2>
+            <h3 class = 'indikator-EPI3'>0</h3>
+        </div>
+        <div class='col-xs-6 col-md-6 indikator EPI'  width = '200' height = '200'>
+                 <h2 class = 'EPI-judul'>kgCO2/1000m3/m</h2>
+                 <h3 class = 'indikator-EPI4'>0</h3>
+        </div>
+        
+    
+</div>   
+
+
+{% endblock content %}
